@@ -299,25 +299,19 @@ proto3.util.setEnumType(PublishedOperationStatus, "wg.cosmo.platform.v1.Publishe
  */
 export enum APISpecificationType {
   /**
-   * @generated from enum value: API_SPECIFICATION_TYPE_UNSPECIFIED = 0;
+   * @generated from enum value: API_SPECIFICATION_TYPE_POSTMAN = 0;
    */
-  API_SPECIFICATION_TYPE_UNSPECIFIED = 0,
+  API_SPECIFICATION_TYPE_POSTMAN = 0,
 
   /**
-   * @generated from enum value: API_SPECIFICATION_TYPE_POSTMAN = 1;
+   * @generated from enum value: API_SPECIFICATION_TYPE_OPENAPI = 1;
    */
-  API_SPECIFICATION_TYPE_POSTMAN = 1,
-
-  /**
-   * @generated from enum value: API_SPECIFICATION_TYPE_OPENAPI = 2;
-   */
-  API_SPECIFICATION_TYPE_OPENAPI = 2,
+  API_SPECIFICATION_TYPE_OPENAPI = 1,
 }
 // Retrieve enum metadata with: proto3.getEnumType(APISpecificationType)
 proto3.util.setEnumType(APISpecificationType, "wg.cosmo.platform.v1.APISpecificationType", [
-  { no: 0, name: "API_SPECIFICATION_TYPE_UNSPECIFIED" },
-  { no: 1, name: "API_SPECIFICATION_TYPE_POSTMAN" },
-  { no: 2, name: "API_SPECIFICATION_TYPE_OPENAPI" },
+  { no: 0, name: "API_SPECIFICATION_TYPE_POSTMAN" },
+  { no: 1, name: "API_SPECIFICATION_TYPE_OPENAPI" },
 ]);
 
 /**
@@ -8044,7 +8038,7 @@ export class ExportPersistedOperationsRequest extends Message<ExportPersistedOpe
   /**
    * @generated from field: wg.cosmo.platform.v1.APISpecificationType format = 3;
    */
-  format = APISpecificationType.API_SPECIFICATION_TYPE_UNSPECIFIED;
+  format = APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN;
 
   /**
    * @generated from field: optional string client_id = 4;

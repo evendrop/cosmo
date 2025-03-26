@@ -1068,9 +1068,8 @@ message GetPersistedOperationsResponse {
 }
 
 enum APISpecificationType {
-  API_SPECIFICATION_TYPE_UNSPECIFIED = 0;
-  API_SPECIFICATION_TYPE_POSTMAN = 1;
-  API_SPECIFICATION_TYPE_OPENAPI = 2;
+  API_SPECIFICATION_TYPE_POSTMAN = 0;
+  API_SPECIFICATION_TYPE_OPENAPI = 1;
 } 
 
 message ExportPersistedOperationsRequest {
