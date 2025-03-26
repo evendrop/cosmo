@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -61,7 +62,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useToast } from "@/components/ui/use-toast";
+import { toast, useToast } from "@/components/ui/use-toast";
 import { SubmitHandler, useZodForm } from "@/hooks/use-form";
 import { docsBaseURL } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format-date";
@@ -78,6 +79,7 @@ import {
 import {
   CopyIcon,
   Cross1Icon,
+  DownloadIcon,
   MagnifyingGlassIcon,
   PlayIcon,
   PlusIcon,
@@ -103,6 +105,9 @@ import { IoBarcodeSharp } from "react-icons/io5";
 import { z } from "zod";
 import { useUser } from "@/hooks/use-user";
 import { APISpecificationType } from "@wundergraph/cosmo-connect/dist/platform/v1/platform_pb";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 const getSnippets = ({
   clientName,
@@ -191,6 +196,18 @@ const ClientOperations = () => {
     },
   );
 
+  const { data, isLoading, error, refetch } = useQuery(
+    getPersistedOperations,
+    {
+      clientId: clientId ?? "",
+      federatedGraphName: slug,
+      namespace,
+    },
+    {
+      enabled: !!clientId,
+    },
+  );
+
   const { ast } = useParseSchema(sdlData?.sdl);
 
   const [search, setSearch] = useState(router.query.search as string);
@@ -206,48 +223,6 @@ const ClientOperations = () => {
       query,
     });
   };
-
-  const { data, isLoading, error, refetch } = useQuery(
-    getPersistedOperations,
-    {
-      clientId: clientId ?? "",
-      federatedGraphName: slug,
-      namespace,
-    },
-    {
-      enabled: !!clientId,
-    },
-  );
-
-  const { data: exportData, isLoading: exportLoading, error: exportError, refetch: exportRefetch } = useQuery(
-    exportPersistedOperations,
-    {
-      federatedGraphName: slug,
-      namespace,
-      format: APISpecificationType.API_SPECIFICATION_TYPE_OPENAPI,
-      // operationId: "1bbd2876bc2c04dee57b77eab350a5cc236552857f81a3f3ee504816726bf36e",
-      // clientId: "eed3d9fb-4947-47ce-83d2-5996eacc9dae",
-
-    },
-    {
-      enabled: !!slug,
-    },
-  );
-
-  useEffect(() => {
-    if (exportData) {
-      console.log(exportData);
-      const postmanCollection = JSON.parse(exportData.exportJson);
-      const blob = new Blob([JSON.stringify(postmanCollection)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${slug}-operations.postman_collection.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      console.log(postmanCollection);
-    }
-  }, [exportData]);
 
   let content: React.ReactNode;
 
@@ -305,29 +280,33 @@ const ClientOperations = () => {
 
     content = (
       <div>
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute bottom-0 left-3 top-0 my-auto" />
-          <Input
-            placeholder="Search by Name or ID"
-            className="pl-8 pr-10"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              applyParams(e.target.value);
-            }}
-          />
-          {search && (
-            <Button
-              variant="ghost"
-              className="absolute bottom-0 right-0 top-0 my-auto rounded-l-none"
-              onClick={() => {
-                setSearch("");
-                applyParams("");
+        <div className="flex gap-x-2">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute bottom-0 left-3 top-0 my-auto" />
+            <Input
+              placeholder="Search by Name or ID"
+              className="pl-8 pr-10"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                applyParams(e.target.value);
               }}
-            >
-              <Cross1Icon />
-            </Button>
-          )}
+            />
+            {search && (
+              <Button
+                variant="ghost"
+                className="absolute bottom-0 right-0 top-0 my-auto rounded-l-none"
+                onClick={() => {
+                  setSearch("");
+                  applyParams("");
+                }}
+              >
+                <Cross1Icon />
+              </Button>
+            )}
+          </div>
+          <Separator orientation="vertical" className="h-8" />
+          <DownloadModal clientId={clientId as string | undefined} />
         </div>
         <Accordion type="single" collapsible className="mt-4 w-full">
           {filteredOperations.map((op) => {
@@ -421,6 +400,7 @@ const ClientOperations = () => {
                           </TooltipTrigger>
                           <TooltipContent>Run in Playground</TooltipContent>
                         </Tooltip>
+                        <DownloadModal operation={op} clientId={clientId ?? undefined} />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="icon">
@@ -619,6 +599,157 @@ const CreateClient = ({ refresh }: { refresh: () => void }) => {
   );
 };
 
+const DownloadModal = ({ operation, clientId }: { 
+  operation?: { id: string, operationNames: string[] }, 
+  clientId?: string | null 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const slug = router.query.slug as string;
+  const namespace = router.query.namespace as string;
+  const clientName = router.query.clientName as string;
+  const [format, setFormat] = useState<APISpecificationType>(APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN);
+
+  const { mutate: exportOps, isPending } = useMutation(exportPersistedOperations, {
+    onSuccess(data) {
+      if (data.response?.code !== EnumStatusCode.OK) {
+        toast({
+          variant: "destructive",
+          title: "Could not export operations",
+          description: data.response?.details ?? "Please try again",
+        });
+        return;
+      }
+
+      // Generate filename based on context
+      let fileName = `${slug}.json`;
+      if (clientId && clientName) {
+        fileName = `${slug}-${clientName}.json`;
+      }
+      if (operation?.operationNames?.length) {
+        fileName = `${operation.operationNames[0]}.json`;
+      }
+
+      try {
+        const blob = new Blob([data.exportJson], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Operation Exported",
+          description: `Exported as ${fileName}, please check your downloads folder`,
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Export failed",
+          description: "Could not download the file. Please try again.",
+        });
+      }
+
+      setIsOpen(false);
+    },
+    onError(error) {
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    }
+  });
+
+  const handleExport = () => {
+    if (!namespace || !slug) {
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: "Missing required parameters. Please try again.",
+      });
+      return;
+    }
+
+    exportOps({
+      federatedGraphName: slug,
+      namespace,
+      format,
+      operationId: operation?.id,
+      clientId: clientId || undefined,
+    });
+  };
+
+  const tooltipContent = operation 
+    ? "Export Operation" 
+    : clientId 
+      ? "Export Client Operations" 
+      : "Export All Operations";
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => {
+              setTimeout(() => setIsOpen(true), 0);
+            }}
+          >
+            <DownloadIcon />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{tooltipContent}</TooltipContent>
+      </Tooltip>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Operations Export</DialogTitle>
+          <DialogDescription>
+            {operation ? (
+              <>Export this operation in your preferred format.</>
+            ) : clientId ? (
+              <>Export client operations in your preferred format.</>
+            ) : (
+              <>Export operations for <code className="text-primary">{slug}</code> in your preferred format.</>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <RadioGroup
+            defaultValue={APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN.toString()}
+            value={format.toString()}
+            onValueChange={(value) => setFormat(parseInt(value) as APISpecificationType)}
+            className="grid gap-4"
+          >
+            <div className="flex items-center space-x-3">
+              <RadioGroupItem id="postman" value={APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN.toString()} />
+              <Label htmlFor="postman" className="font-normal cursor-pointer">
+                Postman Collection
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <RadioGroupItem id="openapi" value={APISpecificationType.API_SPECIFICATION_TYPE_OPENAPI.toString()} />
+              <Label htmlFor="openapi" className="font-normal cursor-pointer">
+                OpenAPI Specification
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleExport} disabled={isPending}>
+            {isPending ? "Exporting..." : "Export"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const ClientsPage: NextPageWithLayout = () => {
   const user = useContext(UserContext);
   const router = useRouter();
@@ -690,7 +821,12 @@ const ClientsPage: NextPageWithLayout = () => {
               </a>
             </>
           }
-          actions={<CreateClient refresh={() => refetch()} />}
+          actions={
+            <div className="flex items-center gap-2">
+              <DownloadModal />
+              <CreateClient refresh={() => refetch()} />
+            </div>
+          }
         />
       ) : (
         <>
@@ -710,7 +846,12 @@ const ClientsPage: NextPageWithLayout = () => {
             {checkUserAccess({
               rolesToBe: ["admin", "developer"],
               userRoles: user?.currentOrganization.roles || [],
-            }) && <CreateClient refresh={() => refetch()} />}
+            }) && (
+              <div className="flex items-center gap-2">
+                <DownloadModal />
+                <CreateClient refresh={() => refetch()} />
+              </div>
+            )}
           </div>
 
           <TableWrapper>
