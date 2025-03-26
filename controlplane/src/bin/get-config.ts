@@ -19,7 +19,7 @@ const getConfig = () => {
     organizationName: process.env.ORGANIZATION_NAME || 'wundergraph',
     organizationSlug: process.env.ORGANIZATION_SLUG || 'wundergraph',
 
-    databaseConnectionUrl: process.env.DB_URL || 'postgresql://postgres:changeme@localhost:5432/controlplane',
+    databaseConnectionUrl: process.env.DB_URL || 'postgresql://postgres:changeme@localhost:5435/controlplane',
     databaseTlsCa: process.env.DB_TLS_CA,
     databaseTlsCert: process.env.DB_TLS_CERT,
     databaseTlsKey: process.env.DB_TLS_KEY,

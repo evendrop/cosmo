@@ -1067,6 +1067,25 @@ message GetPersistedOperationsResponse {
   repeated Operation operations = 2;
 }
 
+enum APISpecificationType {
+  API_SPECIFICATION_TYPE_UNSPECIFIED = 0;
+  API_SPECIFICATION_TYPE_POSTMAN = 1;
+  API_SPECIFICATION_TYPE_OPENAPI = 2;
+} 
+
+message ExportPersistedOperationsRequest {
+  string federated_graph_name = 1;
+  string namespace = 2;
+  APISpecificationType format = 3;
+  optional string client_id = 4;
+  optional string operation_id = 5;
+}
+
+message ExportPersistedOperationsResponse {
+  Response response = 1;
+  string export_json = 2;
+}
+
 message Header{
   string key = 1;
   string value = 2;
@@ -2595,6 +2614,10 @@ service PlatformService {
   rpc PublishPersistedOperations(PublishPersistedOperationsRequest) returns (PublishPersistedOperationsResponse) {}
   // GetPersistedOperations returns operations for the registered client id
   rpc GetPersistedOperations(GetPersistedOperationsRequest) returns (GetPersistedOperationsResponse) {}
+
+  // ExportPersistedOperations exports all persisted operations for a federated graph
+  rpc ExportPersistedOperations(ExportPersistedOperationsRequest) returns (ExportPersistedOperationsResponse) {}
+
   // GetAuditLogs returns the audit logs of the organization
   rpc GetAuditLogs(GetAuditLogsRequest) returns (GetAuditLogsResponse) {}
 

@@ -131,17 +131,19 @@ export class OperationsRepository {
       return undefined;
     }
 
+    const row = operationResult[0];
     return {
-      id: operationResult[0].id,
-      operationId: operationResult[0].operationId,
-      hash: operationResult[0].hash,
-      filePath: operationResult[0].filePath,
-      createdAt: operationResult[0].createdAt.toISOString(),
-      lastUpdatedAt: operationResult[0]?.updatedAt?.toISOString() || '',
-      createdBy: operationResult[0].createdBy ?? '',
-      lastUpdatedBy: operationResult[0].updatedBy ?? '',
-      contents: operationResult[0].operationContent ?? '',
-      clientName: operationResult[0].clientName,
+      id: row.id,
+      operationId: row.operationId,
+      hash: row.hash,
+      filePath: row.filePath,
+      createdAt: row.createdAt.toISOString(),
+      lastUpdatedAt: row?.updatedAt?.toISOString() || '',
+      createdBy: row.createdBy ?? '',
+      lastUpdatedBy: row.updatedBy ?? '',
+      clientName: row.clientName,
+      contents: row.operationContent ?? '',
+      operationNames: row.operationNames ?? [],
     };
   }
 
@@ -406,5 +408,50 @@ export class OperationsRepository {
       .fullJoin(ignore, and(eq(change.hash, ignore.hash), eq(change.namespaceId, ignore.namespaceId)))
       .leftJoin(changeCounts, and(eq(change.hash, changeCounts.hash), eq(change.namespaceId, changeCounts.namespaceId)))
       .orderBy(({ name, hash }) => [asc(name), asc(hash)]);
+  }
+
+  public async getAllPersistedOperations(): Promise<PersistedOperationWithClientDTO[]> {
+    const users1 = aliasedTable(users, 'users1');
+    const users2 = aliasedTable(users, 'users2');
+
+    const operationsResult = await this.db
+      .select({
+        id: federatedGraphPersistedOperations.id,
+        operationId: federatedGraphPersistedOperations.operationId,
+        hash: federatedGraphPersistedOperations.hash,
+        filePath: federatedGraphPersistedOperations.filePath,
+        createdAt: federatedGraphPersistedOperations.createdAt,
+        updatedAt: federatedGraphPersistedOperations.updatedAt,
+        operationContent: federatedGraphPersistedOperations.operationContent,
+        operationNames: federatedGraphPersistedOperations.operationNames,
+        clientName: federatedGraphClients.name,
+        createdBy: users1.email,
+        updatedBy: users2.email,
+      })
+      .from(federatedGraphPersistedOperations)
+      .innerJoin(federatedGraphClients, eq(federatedGraphClients.id, federatedGraphPersistedOperations.clientId))
+      .leftJoin(users1, eq(users1.id, federatedGraphPersistedOperations.createdById))
+      .leftJoin(users2, eq(users2.id, federatedGraphPersistedOperations.updatedById))
+      .where(eq(federatedGraphPersistedOperations.federatedGraphId, this.federatedGraphId))
+      .orderBy(desc(sql`coalesce(${federatedGraphPersistedOperations.updatedAt}, ${federatedGraphPersistedOperations.createdAt})`));
+
+    const operations: PersistedOperationWithClientDTO[] = [];
+
+    for (const row of operationsResult) {
+      operations.push({
+        id: row.id,
+        operationId: row.operationId,
+        hash: row.hash,
+        filePath: row.filePath,
+        createdAt: row.createdAt.toISOString(),
+        lastUpdatedAt: row?.updatedAt?.toISOString() || '',
+        createdBy: row.createdBy ?? '',
+        lastUpdatedBy: row.updatedBy ?? '',
+        contents: row.operationContent ?? '',
+        operationNames: row.operationNames ?? [],
+        clientName: row.clientName,
+      });
+    }
+    return operations;
   }
 }

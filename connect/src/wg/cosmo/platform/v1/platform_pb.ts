@@ -295,6 +295,32 @@ proto3.util.setEnumType(PublishedOperationStatus, "wg.cosmo.platform.v1.Publishe
 ]);
 
 /**
+ * @generated from enum wg.cosmo.platform.v1.APISpecificationType
+ */
+export enum APISpecificationType {
+  /**
+   * @generated from enum value: API_SPECIFICATION_TYPE_UNSPECIFIED = 0;
+   */
+  API_SPECIFICATION_TYPE_UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: API_SPECIFICATION_TYPE_POSTMAN = 1;
+   */
+  API_SPECIFICATION_TYPE_POSTMAN = 1,
+
+  /**
+   * @generated from enum value: API_SPECIFICATION_TYPE_OPENAPI = 2;
+   */
+  API_SPECIFICATION_TYPE_OPENAPI = 2,
+}
+// Retrieve enum metadata with: proto3.getEnumType(APISpecificationType)
+proto3.util.setEnumType(APISpecificationType, "wg.cosmo.platform.v1.APISpecificationType", [
+  { no: 0, name: "API_SPECIFICATION_TYPE_UNSPECIFIED" },
+  { no: 1, name: "API_SPECIFICATION_TYPE_POSTMAN" },
+  { no: 2, name: "API_SPECIFICATION_TYPE_OPENAPI" },
+]);
+
+/**
  * @generated from enum wg.cosmo.platform.v1.IntegrationType
  */
 export enum IntegrationType {
@@ -7998,6 +8024,110 @@ export class GetPersistedOperationsResponse_Operation extends Message<GetPersist
 
   static equals(a: GetPersistedOperationsResponse_Operation | PlainMessage<GetPersistedOperationsResponse_Operation> | undefined, b: GetPersistedOperationsResponse_Operation | PlainMessage<GetPersistedOperationsResponse_Operation> | undefined): boolean {
     return proto3.util.equals(GetPersistedOperationsResponse_Operation, a, b);
+  }
+}
+
+/**
+ * @generated from message wg.cosmo.platform.v1.ExportPersistedOperationsRequest
+ */
+export class ExportPersistedOperationsRequest extends Message<ExportPersistedOperationsRequest> {
+  /**
+   * @generated from field: string federated_graph_name = 1;
+   */
+  federatedGraphName = "";
+
+  /**
+   * @generated from field: string namespace = 2;
+   */
+  namespace = "";
+
+  /**
+   * @generated from field: wg.cosmo.platform.v1.APISpecificationType format = 3;
+   */
+  format = APISpecificationType.API_SPECIFICATION_TYPE_UNSPECIFIED;
+
+  /**
+   * @generated from field: optional string client_id = 4;
+   */
+  clientId?: string;
+
+  /**
+   * @generated from field: optional string operation_id = 5;
+   */
+  operationId?: string;
+
+  constructor(data?: PartialMessage<ExportPersistedOperationsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "wg.cosmo.platform.v1.ExportPersistedOperationsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "federated_graph_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "namespace", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "format", kind: "enum", T: proto3.getEnumType(APISpecificationType) },
+    { no: 4, name: "client_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 5, name: "operation_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExportPersistedOperationsRequest {
+    return new ExportPersistedOperationsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ExportPersistedOperationsRequest {
+    return new ExportPersistedOperationsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ExportPersistedOperationsRequest {
+    return new ExportPersistedOperationsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ExportPersistedOperationsRequest | PlainMessage<ExportPersistedOperationsRequest> | undefined, b: ExportPersistedOperationsRequest | PlainMessage<ExportPersistedOperationsRequest> | undefined): boolean {
+    return proto3.util.equals(ExportPersistedOperationsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message wg.cosmo.platform.v1.ExportPersistedOperationsResponse
+ */
+export class ExportPersistedOperationsResponse extends Message<ExportPersistedOperationsResponse> {
+  /**
+   * @generated from field: wg.cosmo.platform.v1.Response response = 1;
+   */
+  response?: Response;
+
+  /**
+   * @generated from field: string export_json = 2;
+   */
+  exportJson = "";
+
+  constructor(data?: PartialMessage<ExportPersistedOperationsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "wg.cosmo.platform.v1.ExportPersistedOperationsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "response", kind: "message", T: Response },
+    { no: 2, name: "export_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExportPersistedOperationsResponse {
+    return new ExportPersistedOperationsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ExportPersistedOperationsResponse {
+    return new ExportPersistedOperationsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ExportPersistedOperationsResponse {
+    return new ExportPersistedOperationsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ExportPersistedOperationsResponse | PlainMessage<ExportPersistedOperationsResponse> | undefined, b: ExportPersistedOperationsResponse | PlainMessage<ExportPersistedOperationsResponse> | undefined): boolean {
+    return proto3.util.equals(ExportPersistedOperationsResponse, a, b);
   }
 }
 

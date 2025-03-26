@@ -155,6 +155,7 @@ import { updateOrgMemberRole } from './user/updateOrgMemberRole.js';
 import { deleteCacheWarmerOperation } from './cache-warmer/deleteCacheWarmerOperation.js';
 import { setGraphRouterCompatibilityVersion } from './graph/setGraphRouterCompatibilityVersion.js';
 import { getOrganizationBySlug } from './organization/getOrganizationBySlug.js';
+import { exportPersistedOperations } from './persisted-operation/exportPersistedOperations.js';
 
 export default function (opts: RouterOptions): Partial<ServiceImpl<typeof PlatformService>> {
   return {
@@ -576,6 +577,10 @@ export default function (opts: RouterOptions): Partial<ServiceImpl<typeof Platfo
 
     getPersistedOperations: (req, ctx) => {
       return getPersistedOperations(opts, req, ctx);
+    },
+
+    exportPersistedOperations: (req, ctx) => {
+      return exportPersistedOperations(opts, req, ctx);
     },
 
     getRouters: (req, ctx) => {

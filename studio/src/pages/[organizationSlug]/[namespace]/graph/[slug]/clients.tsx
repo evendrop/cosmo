@@ -85,6 +85,7 @@ import {
 import { useQuery, useMutation } from "@connectrpc/connect-query";
 import { EnumStatusCode } from "@wundergraph/cosmo-connect/dist/common/common_pb";
 import {
+  exportPersistedOperations,
   getClients,
   getFederatedGraphSDLByName,
   getPersistedOperations,
@@ -96,11 +97,12 @@ import Fuse from "fuse.js";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { BiAnalyse } from "react-icons/bi";
 import { IoBarcodeSharp } from "react-icons/io5";
 import { z } from "zod";
 import { useUser } from "@/hooks/use-user";
+import { APISpecificationType } from "@wundergraph/cosmo-connect/dist/platform/v1/platform_pb";
 
 const getSnippets = ({
   clientName,
@@ -216,6 +218,36 @@ const ClientOperations = () => {
       enabled: !!clientId,
     },
   );
+
+  const { data: exportData, isLoading: exportLoading, error: exportError, refetch: exportRefetch } = useQuery(
+    exportPersistedOperations,
+    {
+      federatedGraphName: slug,
+      namespace,
+      format: APISpecificationType.API_SPECIFICATION_TYPE_OPENAPI,
+      // operationId: "1bbd2876bc2c04dee57b77eab350a5cc236552857f81a3f3ee504816726bf36e",
+      // clientId: "eed3d9fb-4947-47ce-83d2-5996eacc9dae",
+
+    },
+    {
+      enabled: !!slug,
+    },
+  );
+
+  useEffect(() => {
+    if (exportData) {
+      console.log(exportData);
+      const postmanCollection = JSON.parse(exportData.exportJson);
+      const blob = new Blob([JSON.stringify(postmanCollection)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${slug}-operations.postman_collection.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      console.log(postmanCollection);
+    }
+  }, [exportData]);
 
   let content: React.ReactNode;
 
