@@ -4,7 +4,7 @@ import { exportPersistedOperations } from "@wundergraph/cosmo-connect/dist/platf
 import { APISpecificationType } from "@wundergraph/cosmo-connect/dist/platform/v1/platform_pb";
 import { EnumStatusCode } from "@wundergraph/cosmo-connect/dist/common/common_pb";
 import { DownloadIcon } from "@radix-ui/react-icons";
-import { Button } from "@/components/ui/button";
+import { Button } from "../button";
 import {
   Dialog,
   DialogContent,
@@ -12,11 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { toast } from "@/components/ui/use-toast";
+} from "../dialog";
+import { RadioGroup, RadioGroupItem } from "../radio-group";
+import { Label } from "../label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip";
+import { toast } from "../use-toast";
 
 interface ExportDialogProps {
   operation?: { 
@@ -126,6 +126,7 @@ export const ExportDialog = ({
             onClick={() => {
               setTimeout(() => setIsOpen(true), 0);
             }}
+            aria-label="Export Operations"
           >
             <DownloadIcon />
           </Button>
@@ -153,13 +154,19 @@ export const ExportDialog = ({
             className="grid gap-4"
           >
             <div className="flex items-center space-x-3">
-              <RadioGroupItem id="postman" value={APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN.toString()} />
+              <RadioGroupItem 
+                id="postman" 
+                value={APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN.toString()}
+              />
               <Label htmlFor="postman" className="font-normal cursor-pointer">
                 Postman Collection
               </Label>
             </div>
             <div className="flex items-center space-x-3">
-              <RadioGroupItem id="openapi" value={APISpecificationType.API_SPECIFICATION_TYPE_OPENAPI.toString()} />
+              <RadioGroupItem 
+                id="openapi" 
+                value={APISpecificationType.API_SPECIFICATION_TYPE_OPENAPI.toString()}
+              />
               <Label htmlFor="openapi" className="font-normal cursor-pointer">
                 OpenAPI Specification
               </Label>
