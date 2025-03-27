@@ -40,4 +40,4 @@ export interface APICollection {
 export interface SchemaResult {
   variables: Record<string, unknown>;
   schemas: Record<string, any>;
-} 
+}

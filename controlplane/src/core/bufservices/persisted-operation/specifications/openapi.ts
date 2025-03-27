@@ -45,8 +45,8 @@ export const createOpenAPISpec = (
                 },
               },
               responses: {
-                '200': {
-                  description: 'Successful operation',
+                200: {
+                  description: 'Successful response',
                   content: {
                     'application/json': {
                       schema: {
@@ -87,10 +87,7 @@ export const createOpenAPISpec = (
                                   type: 'array',
                                   description: 'Path in the query to the field that caused the error',
                                   items: {
-                                    oneOf: [
-                                      { type: 'string' },
-                                      { type: 'integer' }
-                                    ],
+                                    oneOf: [{ type: 'string' }, { type: 'integer' }],
                                   },
                                 },
                                 extensions: {
@@ -106,28 +103,17 @@ export const createOpenAPISpec = (
                     },
                   },
                 },
-                '400': {
-                  description: 'Invalid request',
+                400: {
+                  description: 'Bad Request',
                   content: {
                     'application/json': {
                       schema: {
                         type: 'object',
                         properties: {
-                          errors: {
-                            type: 'array',
-                            items: {
-                              type: 'object',
-                              properties: {
-                                message: {
-                                  type: 'string',
-                                  description: 'Error message',
-                                },
-                              },
-                              required: ['message'],
-                            },
+                          message: {
+                            type: 'string',
                           },
                         },
-                        required: ['errors'],
                       },
                     },
                   },
@@ -139,4 +125,4 @@ export const createOpenAPISpec = (
       }),
     ),
   };
-}; 
+};

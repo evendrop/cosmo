@@ -411,8 +411,8 @@ export class OperationsRepository {
   }
 
   public async getAllPersistedOperations(): Promise<PersistedOperationWithClientDTO[]> {
-    const users1 = aliasedTable(users, 'users1');
-    const users2 = aliasedTable(users, 'users2');
+    const createdBy = aliasedTable(users, 'createdBy');
+    const updatedBy = aliasedTable(users, 'updatedBy');
 
     const operationsResult = await this.db
       .select({
@@ -425,15 +425,19 @@ export class OperationsRepository {
         operationContent: federatedGraphPersistedOperations.operationContent,
         operationNames: federatedGraphPersistedOperations.operationNames,
         clientName: federatedGraphClients.name,
-        createdBy: users1.email,
-        updatedBy: users2.email,
+        createdBy: createdBy.email,
+        updatedBy: updatedBy.email,
       })
       .from(federatedGraphPersistedOperations)
       .innerJoin(federatedGraphClients, eq(federatedGraphClients.id, federatedGraphPersistedOperations.clientId))
-      .leftJoin(users1, eq(users1.id, federatedGraphPersistedOperations.createdById))
-      .leftJoin(users2, eq(users2.id, federatedGraphPersistedOperations.updatedById))
+      .leftJoin(createdBy, eq(createdBy.id, federatedGraphPersistedOperations.createdById))
+      .leftJoin(updatedBy, eq(updatedBy.id, federatedGraphPersistedOperations.updatedById))
       .where(eq(federatedGraphPersistedOperations.federatedGraphId, this.federatedGraphId))
-      .orderBy(desc(sql`coalesce(${federatedGraphPersistedOperations.updatedAt}, ${federatedGraphPersistedOperations.createdAt})`));
+      .orderBy(
+        desc(
+          sql`coalesce(${federatedGraphPersistedOperations.updatedAt}, ${federatedGraphPersistedOperations.createdAt})`,
+        ),
+      );
 
     const operations: PersistedOperationWithClientDTO[] = [];
 

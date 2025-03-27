@@ -51,8 +51,8 @@ export function exportPersistedOperations(
       const clientOperations = await operationsRepo.getPersistedOperations(req.clientId);
       // Convert PersistedOperationDTO to PersistedOperationWithClientDTO
       const clients = await operationsRepo.getRegisteredClients();
-      const clientName = clients.find(c => c.id === req.clientId)?.name || 'Unknown Client';
-      operations = clientOperations.map(op => ({
+      const clientName = clients.find((c) => c.id === req.clientId)?.name || 'Unknown Client';
+      operations = clientOperations.map((op) => ({
         ...op,
         clientName,
       }));
@@ -63,7 +63,7 @@ export function exportPersistedOperations(
 
     let exportJson = '';
     switch (req.format) {
-      case APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN:
+      case APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN: {
         const baseUrl = (federatedGraph.routingUrl || '/').replace(/\/+$/, '');
         exportJson = JSON.stringify(
           createPostmanCollection(req.federatedGraphName, operations, baseUrl, extractVariablesFromGraphQL),
@@ -71,14 +71,16 @@ export function exportPersistedOperations(
           2,
         );
         break;
+      }
 
-      case APISpecificationType.API_SPECIFICATION_TYPE_OPENAPI:
+      case APISpecificationType.API_SPECIFICATION_TYPE_OPENAPI: {
         exportJson = JSON.stringify(
           createOpenAPISpec(req.federatedGraphName, operations, extractVariablesFromGraphQL),
           null,
           2,
         );
         break;
+      }
     }
 
     return {

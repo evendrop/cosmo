@@ -1,6 +1,13 @@
 import { PersistedOperationWithClientDTO } from '../../../../types/index.js';
 import { APICollection, PostmanRequestItem, PostmanFolderItem, SchemaResult } from './types.js';
 
+interface PostmanVariable {
+  key: string;
+  value: string;
+  type: string;
+  enabled: boolean;
+}
+
 export const createPostmanCollection = (
   federatedGraphName: string,
   operations: PersistedOperationWithClientDTO[],
@@ -8,14 +15,15 @@ export const createPostmanCollection = (
   extractVariablesFromGraphQL: (query: string) => SchemaResult,
 ): APICollection => {
   // Group operations by client name
-  const operationsByClient = operations.reduce<Record<string, PersistedOperationWithClientDTO[]>>((acc, op) => {
+  const operationsByClient: Record<string, PersistedOperationWithClientDTO[]> = {};
+
+  for (const op of operations) {
     const clientName = op.clientName || 'Unknown Client';
-    if (!acc[clientName]) {
-      acc[clientName] = [];
+    if (!operationsByClient[clientName]) {
+      operationsByClient[clientName] = [];
     }
-    acc[clientName].push(op);
-    return acc;
-  }, {});
+    operationsByClient[clientName].push(op);
+  }
 
   return {
     info: {
@@ -55,4 +63,17 @@ export const createPostmanCollection = (
       },
     ],
   };
-}; 
+};
+
+function buildVariables(variables: Record<string, unknown>): PostmanVariable[] {
+  const result: PostmanVariable[] = [];
+  for (const [key, value] of Object.entries(variables)) {
+    result.push({
+      key,
+      value: value === null ? '' : String(value),
+      type: 'string',
+      enabled: true,
+    });
+  }
+  return result;
+}
