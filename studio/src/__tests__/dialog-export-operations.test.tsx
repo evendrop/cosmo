@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ExportDialog } from "../components/ui/dialog-export-operations";
-import { EnumStatusCode } from "@wundergraph/cosmo-connect/dist/common/common_pb";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useMutation } from "@connectrpc/connect-query";
