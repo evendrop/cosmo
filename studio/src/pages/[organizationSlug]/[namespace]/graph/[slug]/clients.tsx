@@ -24,7 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -79,7 +78,6 @@ import {
 import {
   CopyIcon,
   Cross1Icon,
-  DownloadIcon,
   MagnifyingGlassIcon,
   PlayIcon,
   PlusIcon,
@@ -99,14 +97,11 @@ import Fuse from "fuse.js";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { BiAnalyse } from "react-icons/bi";
 import { IoBarcodeSharp } from "react-icons/io5";
 import { z } from "zod";
 import { useUser } from "@/hooks/use-user";
-import { APISpecificationType } from "@wundergraph/cosmo-connect/dist/platform/v1/platform_pb";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ExportDialog } from "@/components/ui/dialog-export-operations";
 
