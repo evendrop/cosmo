@@ -61,7 +61,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useToast } from "@/components/ui/use-toast";
+import { toast, useToast } from "@/components/ui/use-toast";
 import { SubmitHandler, useZodForm } from "@/hooks/use-form";
 import { docsBaseURL } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format-date";
@@ -85,6 +85,7 @@ import {
 import { useQuery, useMutation } from "@connectrpc/connect-query";
 import { EnumStatusCode } from "@wundergraph/cosmo-connect/dist/common/common_pb";
 import {
+  exportPersistedOperations,
   getClients,
   getFederatedGraphSDLByName,
   getPersistedOperations,
@@ -101,6 +102,8 @@ import { BiAnalyse } from "react-icons/bi";
 import { IoBarcodeSharp } from "react-icons/io5";
 import { z } from "zod";
 import { useUser } from "@/hooks/use-user";
+import { Separator } from "@/components/ui/separator";
+import { ExportDialog } from "@/components/ui/dialog-export-operations";
 
 const getSnippets = ({
   clientName,
@@ -189,6 +192,18 @@ const ClientOperations = () => {
     },
   );
 
+  const { data, isLoading, error, refetch } = useQuery(
+    getPersistedOperations,
+    {
+      clientId: clientId ?? "",
+      federatedGraphName: slug,
+      namespace,
+    },
+    {
+      enabled: !!clientId,
+    },
+  );
+
   const { ast } = useParseSchema(sdlData?.sdl);
 
   const [search, setSearch] = useState(router.query.search as string);
@@ -204,18 +219,6 @@ const ClientOperations = () => {
       query,
     });
   };
-
-  const { data, isLoading, error, refetch } = useQuery(
-    getPersistedOperations,
-    {
-      clientId: clientId ?? "",
-      federatedGraphName: slug,
-      namespace,
-    },
-    {
-      enabled: !!clientId,
-    },
-  );
 
   let content: React.ReactNode;
 
@@ -273,29 +276,38 @@ const ClientOperations = () => {
 
     content = (
       <div>
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute bottom-0 left-3 top-0 my-auto" />
-          <Input
-            placeholder="Search by Name or ID"
-            className="pl-8 pr-10"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              applyParams(e.target.value);
-            }}
-          />
-          {search && (
-            <Button
-              variant="ghost"
-              className="absolute bottom-0 right-0 top-0 my-auto rounded-l-none"
-              onClick={() => {
-                setSearch("");
-                applyParams("");
+        <div className="flex gap-x-2">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute bottom-0 left-3 top-0 my-auto" />
+            <Input
+              placeholder="Search by Name or ID"
+              className="pl-8 pr-10"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                applyParams(e.target.value);
               }}
-            >
-              <Cross1Icon />
-            </Button>
-          )}
+            />
+            {search && (
+              <Button
+                variant="ghost"
+                className="absolute bottom-0 right-0 top-0 my-auto rounded-l-none"
+                onClick={() => {
+                  setSearch("");
+                  applyParams("");
+                }}
+              >
+                <Cross1Icon />
+              </Button>
+            )}
+          </div>
+          <Separator orientation="vertical" className="h-8" />
+          <ExportDialog 
+            clientId={clientId as string | undefined} 
+            clientName={clientName as string | undefined}
+            federatedGraphName={slug} 
+            namespace={namespace} 
+          />
         </div>
         <Accordion type="single" collapsible className="mt-4 w-full">
           {filteredOperations.map((op) => {
@@ -389,6 +401,13 @@ const ClientOperations = () => {
                           </TooltipTrigger>
                           <TooltipContent>Run in Playground</TooltipContent>
                         </Tooltip>
+                        <ExportDialog 
+                          operation={op} 
+                          clientId={clientId ?? undefined} 
+                          clientName={clientName ?? undefined}
+                          federatedGraphName={slug} 
+                          namespace={namespace} 
+                        />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="icon">
@@ -658,7 +677,15 @@ const ClientsPage: NextPageWithLayout = () => {
               </a>
             </>
           }
-          actions={<CreateClient refresh={() => refetch()} />}
+          actions={
+            <div className="flex items-center gap-2">
+              <ExportDialog 
+                federatedGraphName={slug}
+                namespace={namespace}
+              />
+              <CreateClient refresh={() => refetch()} />
+            </div>
+          }
         />
       ) : (
         <>
@@ -678,7 +705,15 @@ const ClientsPage: NextPageWithLayout = () => {
             {checkUserAccess({
               rolesToBe: ["admin", "developer"],
               userRoles: user?.currentOrganization.roles || [],
-            }) && <CreateClient refresh={() => refetch()} />}
+            }) && (
+              <div className="flex items-center gap-2">
+                <ExportDialog 
+                  federatedGraphName={slug}
+                  namespace={namespace}
+                />
+                <CreateClient refresh={() => refetch()} />
+              </div>
+            )}
           </div>
 
           <TableWrapper>

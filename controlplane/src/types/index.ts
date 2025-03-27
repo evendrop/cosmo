@@ -458,6 +458,7 @@ export interface PersistedOperationWithClientDTO {
   lastUpdatedBy: string;
   clientName: string;
   contents: string;
+  operationNames: string[];
 }
 
 export interface PersistedOperationDTO {
