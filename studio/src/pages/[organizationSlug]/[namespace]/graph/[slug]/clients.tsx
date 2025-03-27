@@ -108,6 +108,7 @@ import { APISpecificationType } from "@wundergraph/cosmo-connect/dist/platform/v
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { ExportDialog } from "@/components/ui/dialog-export-operations";
 
 const getSnippets = ({
   clientName,
@@ -306,7 +307,12 @@ const ClientOperations = () => {
             )}
           </div>
           <Separator orientation="vertical" className="h-8" />
-          <DownloadModal clientId={clientId as string | undefined} />
+          <ExportDialog 
+            clientId={clientId as string | undefined} 
+            clientName={clientName as string | undefined}
+            federatedGraphName={slug} 
+            namespace={namespace} 
+          />
         </div>
         <Accordion type="single" collapsible className="mt-4 w-full">
           {filteredOperations.map((op) => {
@@ -400,7 +406,13 @@ const ClientOperations = () => {
                           </TooltipTrigger>
                           <TooltipContent>Run in Playground</TooltipContent>
                         </Tooltip>
-                        <DownloadModal operation={op} clientId={clientId ?? undefined} />
+                        <ExportDialog 
+                          operation={op} 
+                          clientId={clientId ?? undefined} 
+                          clientName={clientName ?? undefined}
+                          federatedGraphName={slug} 
+                          namespace={namespace} 
+                        />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="icon">
@@ -599,157 +611,6 @@ const CreateClient = ({ refresh }: { refresh: () => void }) => {
   );
 };
 
-const DownloadModal = ({ operation, clientId }: { 
-  operation?: { id: string, operationNames: string[] }, 
-  clientId?: string | null 
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
-  const slug = router.query.slug as string;
-  const namespace = router.query.namespace as string;
-  const clientName = router.query.clientName as string;
-  const [format, setFormat] = useState<APISpecificationType>(APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN);
-
-  const { mutate: exportOps, isPending } = useMutation(exportPersistedOperations, {
-    onSuccess(data) {
-      if (data.response?.code !== EnumStatusCode.OK) {
-        toast({
-          variant: "destructive",
-          title: "Could not export operations",
-          description: data.response?.details ?? "Please try again",
-        });
-        return;
-      }
-
-      // Generate filename based on context
-      let fileName = `${slug}.json`;
-      if (clientId && clientName) {
-        fileName = `${slug}-${clientName}.json`;
-      }
-      if (operation?.operationNames?.length) {
-        fileName = `${operation.operationNames[0]}.json`;
-      }
-
-      try {
-        const blob = new Blob([data.exportJson], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
-        
-        toast({
-          title: "Operation Exported",
-          description: `Exported as ${fileName}, please check your downloads folder`,
-        });
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Export failed",
-          description: "Could not download the file. Please try again.",
-        });
-      }
-
-      setIsOpen(false);
-    },
-    onError(error) {
-      toast({
-        variant: "destructive",
-        title: "Export failed",
-        description: "An unexpected error occurred. Please try again.",
-      });
-    }
-  });
-
-  const handleExport = () => {
-    if (!namespace || !slug) {
-      toast({
-        variant: "destructive",
-        title: "Export failed",
-        description: "Missing required parameters. Please try again.",
-      });
-      return;
-    }
-
-    exportOps({
-      federatedGraphName: slug,
-      namespace,
-      format,
-      operationId: operation?.id,
-      clientId: clientId || undefined,
-    });
-  };
-
-  const tooltipContent = operation 
-    ? "Export Operation" 
-    : clientId 
-      ? "Export Client Operations" 
-      : "Export All Operations";
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => {
-              setTimeout(() => setIsOpen(true), 0);
-            }}
-          >
-            <DownloadIcon />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{tooltipContent}</TooltipContent>
-      </Tooltip>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Operations Export</DialogTitle>
-          <DialogDescription>
-            {operation ? (
-              <>Export this operation in your preferred format.</>
-            ) : clientId ? (
-              <>Export client operations in your preferred format.</>
-            ) : (
-              <>Export operations for <code className="text-primary">{slug}</code> in your preferred format.</>
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <RadioGroup
-            defaultValue={APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN.toString()}
-            value={format.toString()}
-            onValueChange={(value) => setFormat(parseInt(value) as APISpecificationType)}
-            className="grid gap-4"
-          >
-            <div className="flex items-center space-x-3">
-              <RadioGroupItem id="postman" value={APISpecificationType.API_SPECIFICATION_TYPE_POSTMAN.toString()} />
-              <Label htmlFor="postman" className="font-normal cursor-pointer">
-                Postman Collection
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3">
-              <RadioGroupItem id="openapi" value={APISpecificationType.API_SPECIFICATION_TYPE_OPENAPI.toString()} />
-              <Label htmlFor="openapi" className="font-normal cursor-pointer">
-                OpenAPI Specification
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleExport} disabled={isPending}>
-            {isPending ? "Exporting..." : "Export"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 const ClientsPage: NextPageWithLayout = () => {
   const user = useContext(UserContext);
   const router = useRouter();
@@ -823,7 +684,10 @@ const ClientsPage: NextPageWithLayout = () => {
           }
           actions={
             <div className="flex items-center gap-2">
-              <DownloadModal />
+              <ExportDialog 
+                federatedGraphName={slug}
+                namespace={namespace}
+              />
               <CreateClient refresh={() => refetch()} />
             </div>
           }
@@ -848,7 +712,10 @@ const ClientsPage: NextPageWithLayout = () => {
               userRoles: user?.currentOrganization.roles || [],
             }) && (
               <div className="flex items-center gap-2">
-                <DownloadModal />
+                <ExportDialog 
+                  federatedGraphName={slug}
+                  namespace={namespace}
+                />
                 <CreateClient refresh={() => refetch()} />
               </div>
             )}
